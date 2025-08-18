@@ -1,8 +1,31 @@
 from fastapi import FastAPI, HTTPException, status
 from models import PersonagensOnePiece
+from typing import Any
+from routes import curso_router, usuario_router
+import requests
 
 
-app = FastAPI()
+app = FastAPI(title="API dos personagens de One Piece - DS17", version="0.01",
+              description="Uma API para o estudar de FASTAPI")
+
+app.include_router(curso_router.router, tags=["Cursos"])
+app.include_router(usuario_router.router, tags=["Usuário"])
+
+@app.get("/personagem/{personagem_id}")
+def get_ponei(id: int):
+    response = requests.get(f"https://ponyapi.net/v1/character/{id}")
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {"Message": "Ponei não encontrado"}
+
+
+def fake_db():
+    try:
+        print("Abrindo conexão com banco de dados")
+    finally:
+        print("Conexão oncluída")
 
 personagens = {
     1:{
@@ -33,7 +56,9 @@ async def get_personagens():
 
 
 #Personagem especifico
-@app.get("/personagens/{personagem_id}")
+@app.get("/personagens/{personagem_id}", description="Retora 1 personagem com ID especifico ou retorna o erro 404",
+         summary="Retorna um personagem especifico")
+
 async def get_personagem(personagem_id: int):
     try:
         personagem = personagens[personagem_id]
@@ -70,6 +95,11 @@ async def delete_usuario(personagem_id: int):
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Personagem não encontrado")
     
+
+@app.get("/calculadora")
+async def calcular(a: int, b: int):
+    soma = a + b
+    return print(f"Soma: {soma}")
 
 if __name__ == "__main__":
     import uvicorn
